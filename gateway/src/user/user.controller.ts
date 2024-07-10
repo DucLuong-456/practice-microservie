@@ -11,6 +11,7 @@ import {
 import { ClientProxy } from '@nestjs/microservices';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { SearchUserDto } from './dto/search-user.dto';
 
 @Controller('users')
 export class UserController {
@@ -20,20 +21,17 @@ export class UserController {
 
   @Post()
   async create(@Body() createUserDto: CreateUserDto) {
-    return this.clientUserService.send(
-      { cmd: 'create-user' },
-      { createUserDto },
-    );
+    return this.clientUserService.send({ cmd: 'create-user' }, createUserDto);
   }
 
   @Get()
-  async findAll() {
-    return this.clientUserService.send({ cmd: 'get-all-user' }, {});
+  async findAll(@Body() searchUserDto: SearchUserDto) {
+    return this.clientUserService.send({ cmd: 'get-all-user' }, searchUserDto);
   }
 
   @Get(':id')
   async findOne(@Param('id') id: string) {
-    return this.clientUserService.send({ cmd: 'get-user' }, { id });
+    return this.clientUserService.send({ cmd: 'get-user' }, id);
   }
 
   @Patch(':id')
@@ -46,6 +44,6 @@ export class UserController {
 
   @Delete(':id')
   async remove(@Param('id') id: string) {
-    return this.clientUserService.send({ cmd: 'delete-user' }, { id });
+    return this.clientUserService.send({ cmd: 'delete-user' }, id);
   }
 }

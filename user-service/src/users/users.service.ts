@@ -10,6 +10,7 @@ import { InjectModel } from '@nestjs/mongoose';
 import { User, UserDocument } from './schemas/user.schema';
 import { Model, isValidObjectId } from 'mongoose';
 import * as _ from 'lodash';
+import { SearchUserDto } from './dto/search-user.dto';
 @Injectable()
 export class UsersService {
   constructor(@InjectModel(User.name) private userModel: Model<UserDocument>) {}
@@ -23,10 +24,22 @@ export class UsersService {
     return new_user;
   }
 
-  async findAll() {
-    const users = await this.userModel.find();
+  async findAll(searchUserDto: SearchUserDto) {
+    const { limit, page } = searchUserDto;
+    const skip = limit * (page - 1);
+
+    const totalCount = await this.userModel.countDocuments();
+    if (skip >= totalCount) {
+      console.log(skip, totalCount);
+      throw new HttpException(
+        'Page number exceeds total pages available.',
+        HttpStatus.FORBIDDEN,
+      );
+    }
+    const users = await this.userModel.find().limit(limit).skip(skip);
     if (_.isEmpty(users))
       throw new HttpException('Users is empty!', HttpStatus.FORBIDDEN);
+    console.log('users', users);
     return users;
   }
 
@@ -37,7 +50,6 @@ export class UsersService {
     const user: User = await this.userModel.findById(id);
     if (!user)
       throw new HttpException('User is not found!', HttpStatus.NOT_FOUND);
-    console.log('user', user);
 
     return user;
   }
